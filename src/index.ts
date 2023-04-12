@@ -1,2 +1,1 @@
-const num:number = 123
-document.title = '222'
+import './example/basic-type'
