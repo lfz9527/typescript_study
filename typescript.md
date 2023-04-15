@@ -862,13 +862,444 @@ function handleData(x: any): any {
 
 
 
-
-
 # 泛型
+
+```js
+// 泛型基础使用
+// const getArray = (value: any, times: number = 5): any[] => {
+//   return new Array(times).fill(value)
+// }
+
+// // 丢失了类型的约束
+// getArray(2, 5).map(v => v.length) //  [undefined, undefined, undefined, undefined, undefined]
+
+// <T> 泛型，如果value 是什么乐西。返回值就是什么类型
+const getArray = <T>(value: T, times: number = 5): T[] => {
+  return new Array(times).fill(value)
+}
+
+getArray<number>(2, 5).map(v => v.toFixed) //  会报错，因为类型检测
+
+// 泛型变量
+// <T> T可以是任何值，T用得比较多 也可以明确类型 <string,number>
+const getArray1 = <T, U>(param1: T, param2: U, time: number): Array<[T, U]> => {
+  return new Array(time).fill([param1, param2])
+}
+
+console.log(getArray1(1, '34', 3).forEach(item => {
+  console.log(item[0]);
+  console.log(item[1]);
+  return item
+}));
+
+// 通过泛型定义函数变量
+let getArray2: <T> (arg: T, timer: number) => Array<T>
+getArray2 = (arg, items) => {
+  return new Array(items).fill(arg)
+}
+// getArray2(4, 4).map(v => v.length)
+
+// 通过类型别名，泛型定义类型
+type GetArray = <T> (arg: T, timer: number) => Array<T>
+const getArray3: GetArray = (v, i) => {
+  return new Array(i).fill(v)
+}
+
+// 通过接口，泛型定义类型'
+interface GetArrayInter {
+  <T>(arg: T, time: number): T[],  // 方式一 
+  <T>(arg: any, time: number): Array<T>, // 方式二
+}
+
+// 泛型也可以定义在接口，接口里面都可以使用这个泛型
+interface GetArrayInter1<T> {
+  (arg: T, time: number): T[],  // 方式一 
+  (arg: any, time: number): Array<T>, // 方式二
+  array: T[]
+}
+
+// 泛型变量限制
+interface ValueWithLength {
+  length: number
+}
+
+const getArr = <T extends ValueWithLength>(arg: T, items): T[] => {
+  return new Array(items).fill(arg)
+}
+getArr([3, 5], 3)
+// getArr(23,4) // number 类型没有 length 属性
+getArr('23', 2)
+
+// 在泛型属性中使用类型约束
+// a keyof b ,a是b 中的属性
+const getProp = <T, K extends keyof T>(obj: T, prodName: K) => {
+  return obj[prodName]
+}
+
+const objs = {
+  a: 'a',
+  b: 'b'
+}
+
+getProp(objs, 'a')
+// getProp(objs, 'f') // 因为没有f属性，所以会报错
+
+console.log(getProp(objs, 'a'));
+
+```
 
 
 
 # 类
+
+## es6和es5代码实现方式
+
+```js
+// 沒有 class 的es5时
+function Point(x, y) {
+  this.x = x
+  this.y = y
+}
+
+Point.prototype.getPosition = function () {
+  return "{" + this.x + "," + this.y + "}"
+}
+
+var p1 = new Point(1, 3)
+console.log(p1 instanceof Point)
+console.log(p1)
+console.log(p1.getPosition())
+
+var p2 = new Point(2, 4)
+console.log(p2.getPosition())
+
+// es6中方式
+class Points {
+  constructor(x, y) {
+    this.x = x
+    this.y = y
+    // 如果构造函数的返回值为对象，比如数组，对象，那么new Points 时
+    // 等于是执行一个普通的函数，而不再是初始化对象
+    // return { a: 1 }
+  }
+
+  getPosition() {
+    return `{${this.x},${this.y}}`
+  }
+}
+
+var cp1 = new Points(1, 3)
+// console.log(cp1.getPosition())
+// console.log(cp1 instanceof Points)
+console.log(cp1.hasOwnProperty("x")) // true
+console.log(cp1.hasOwnProperty("getPosition")) // false getPosition 不属于cp1的自有属性
+console.log(cp1.__proto__.hasOwnProperty("getPosition")) // true 这说明 这个方法属于通过原型继承过来的
+
+```
+
+
+
+## set和get关键字
+
+```js
+console.log(info.age) // 18
+info.age = 15
+
+class Es6info {
+  constructor(age) {
+    this._age = age
+  }
+  set age(newVal) {
+    console.log("newVal====>", newVal)
+    this._age = newVal
+  }
+  get age() {
+    return this._age
+  }
+}
+const infos = new Es6info(23)
+console.log(infos.age) // 23
+```
+
+
+
+## 定义形式
+
+```js
+// function 两种形式定义
+const f1 = function () {}
+function f2() {}
+
+// class 两种形式定义
+class c1 {
+  constructor() {}
+}
+
+// 类名为 c2
+const c2 = class {
+  constructor() {}
+}
+```
+
+
+
+## 静态方法
+
+```js
+// 静态方法
+// es6 class 里面通过static 关键字表示静态方法
+class staFunc {
+  // z = 0 // 也可以直接写在外面 ，也可以写在constructor 函数里面
+  constructor(x, y) {
+    this.x = x
+    this.y = y
+  }
+
+  getPosition() {
+    return `x=${this.x},y=${this.y}`
+  }
+
+  static getClassName() {
+    return staFunc.name
+  }
+}
+console.log(staFunc.getClassName()) // staFunc
+const cClass = new staFunc(2, 3)
+// cClass.getClassName() false 应为静态方法不能被继承
+
+class staFunc1 {
+  constructor() {
+    this.x = 0
+  }
+}
+staFunc1.y = 23 // 通过这种方式可以设置静态属性
+const s1 = new staFunc1()
+// console.log(s1.y) undefined
+
+// 将私有方法移出模块
+// 如果模块没有导出_func2 模块外面是拿不到_func2
+const _func2 = () => {}
+class staFunc2 {
+  func1() {
+    _func2.call(this)
+  }
+}
+
+const s2 = new staFunc2()
+// s2._func2() 会报错，
+
+// 利用Symbol类型的唯一性
+// 如果模块没有导出 _func3 模块外面是拿不到 _func3
+const _func3 = Symbol("func1")
+export default class staFunc3 {
+  static [_func3]() {}
+}
+
+function abs() {
+  // new.target 可以判断此函数是否为new ，还是作为方法直接调用
+  // 如果是new调用
+  console.log(new.target)
+}
+const abs1 = new abs()
+
+class staFunc4 {
+  constructor() {
+    // 同理 es6也一样
+    console.log(new.target)
+  }
+}
+const staFunc5 = new staFunc4()
+
+class Parent {
+  constructor() {
+    // 如果此类被继承的话，子类实例化时，这里会打印出子类
+    if (new.target === Parent) {
+      throw new Error("不能实例化")
+    }
+    console.log("Parent===>", new.target)
+  }
+}
+
+// 父类实例时
+const Parents = new Parent()
+
+class child extends Parent {
+  constructor() {
+    super()
+    console.log("child======", new.target)
+  }
+}
+
+// const children = new child()
+
+```
+
+
+
+## 继承
+
+```js
+// 基础
+
+// es5中,使用原型链继承
+function Food() {
+  this.type = "food"
+}
+
+Food.prototype.getType = function () {
+  return this.type
+}
+
+function Vegetables(name) {
+  this.name = name
+}
+
+Vegetables.prototype = new Food()
+
+const tomato = new Vegetables("tomato")
+
+// console.log(tomato.getType()) // food
+
+// es6
+// 类的基础
+class Parent {
+  constructor(name) {
+    this.name = name
+  }
+  getName() {
+    return this.name
+  }
+
+  static getStaticName() {
+    return this.name
+  }
+}
+
+class child extends Parent {
+  constructor(name, age) {
+    super(name)
+    this.age = age
+  }
+}
+
+const children = new child("liming", 23)
+// console.log(children.getName()) // liming
+// console.log(child.getStaticName()) // child this.name 指向了子类，name就是构造函数的名字
+// console.log(children.getStaticName()) // 报错
+// console.log(children instanceof child) // true
+// console.log(children instanceof Parent) // true
+
+// 能够获取构造函数的原型对象
+// console.log(Object.getPrototypeOf(child) === Parent) // true
+
+// super 关键字
+// 当super 作为函数时，代表父类的构造函数 constructor ，只能放在子类的构造函数里面
+// 当super 作为对象时，
+//  作为普通方法中指向的是父类的原型对象
+//  在静态方法中指向的是父类
+
+class Parent1 {
+  constructor() {
+    this.type = "parent1"
+  }
+  getName() {
+    return this.type
+  }
+}
+
+Parent1.getType = () => {
+  return "is parent"
+}
+
+class child1 extends Parent1 {
+  constructor() {
+    super()
+    // super 指向父类的原型对象
+    console.log("constructor: " + super.getName())
+  }
+
+  getParentName() {
+    // super 指向父类的原型对象
+    console.log("getParentName: " + super.getName())
+  }
+  getParentType() {
+    // super 指向父类的原型对象而不是父类的本身
+    console.log("getParentName: " + super.getType()) // 报错
+  }
+
+  static getStaticParentType() {
+    // super 指向父类的本身
+    console.log("getParentName: " + super.getType())
+  }
+}
+
+const children1 = new child1()
+// children1.getParentName()
+// child1.getParentType() 报错
+// child1.getStaticParentType()
+
+class Parent2 {
+  constructor() {
+    this.name = "parent1"
+  }
+  print() {
+    console.log(this.name)
+  }
+}
+
+class child2 extends Parent2 {
+  constructor() {
+    // super 作为方法
+    super()
+    this.name = "child"
+  }
+
+  childPrint() {
+    // super 作为对象
+    super.print()
+  }
+}
+
+const c2 = new child2()
+c2.childPrint() // child this指向child2
+
+// 类的prototype，__proto__
+var obj = new Object()
+console.log(obj.__proto__ === Object.prototype) // true
+
+// 子类的__proto__指向父类本身
+// 子类的prototype属性的__proto__指向父类的prototype属性
+// 实例的__proto__属性的__proto__指向父类实例的__proto__
+
+// Boolean
+// Number
+// String
+// Array
+// Date
+// Function
+// RegExp
+// Error
+// Object
+
+// es5中不能允许原生的构造函数
+// es6中允许继承原生构造函数
+
+class CustomArray extends Array {
+  constructor(...args) {
+    super(...args)
+  }
+}
+
+const customArray = new CustomArray(3)
+console.log(customArray.fill("--"))
+
+```
+
+
+
+## TS中的类
+
+
 
 
 
