@@ -1,3 +1,5 @@
 // import './example/basic-type'
 // import './example/basic-symbol'
-import './example/Interface' 
+// import './example/Interface' 
+// import './example/function'
+import './example/generic'
