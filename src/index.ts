@@ -5,4 +5,5 @@
 // import './example/generic'
 // import './example/class/base-class1'
 // import './example/class/base-class2'
-import './example/class/class'
+// import './example/class/class'
+import './example/Enumerate'
