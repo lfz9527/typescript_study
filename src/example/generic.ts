@@ -56,7 +56,7 @@ interface ValueWithLength {
   length: number
 }
 
-const getArr = <T extends ValueWithLength>(arg: T, items): T[] => {
+const getArr = <T extends ValueWithLength>(arg: T, items: number): T[] => {
   return new Array(items).fill(arg)
 }
 getArr([3, 5], 3)

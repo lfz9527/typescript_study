@@ -101,7 +101,7 @@ console.log(ac); // {}，如果加了参数属性则直接赋值 {ac: 'class}
 class Info {
   name: string
   age?: number
-  private _infoStr: string
+  private _infoStr: string = '23'
   constructor(name: string, age?: number, public sex?: string) {
     this.name = name
     this.age = age
@@ -148,8 +148,8 @@ abstract class People {
 
 // 非抽象类“Man”不会实现继承自“People”类的抽象成员“printName”
 class Man extends People {
-  _name: string
-  insideName: string
+  _name: string = ''
+  insideName: string = 'ef'
   constructor(name: string) {
     super(name)
   }
@@ -174,14 +174,14 @@ interface FoodInterFace {
 
 // 类上使用接口
 class foodClass implements FoodInterFace {
-  type: string
+  type: string = 'sd'
   // type: string // 正常
   // static type: string // 会报错，因为类的静态属性只能类调用，实例不能调用，所以会报错
 }
 
 // 接口继承类
 class B {
-  protected name: string
+  protected name: string = 'sd'
 }
 
 interface I extends B { }
@@ -190,7 +190,7 @@ interface I extends B { }
 // B类中含有 保护属性
 // 所以D 需要继承B类，因为 保护类只有继承的子类的实例才能有该属性
 class D extends B implements I {
-  name: string
+  name: string = 'fe'
 }
 
 const DC = new D()

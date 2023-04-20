@@ -54,7 +54,7 @@ addFunction = (x, y = 4) => x + y
 // getVal(2, 3)
 
 // es6 使用args
-function getVal(...args) {
+function getVal(...args: number[]) {
   console.log(args); // [2,3]
 
 }
@@ -69,7 +69,7 @@ function handleData(x: string): string[] // 函数重载
 function handleData(x: number): number[] // 函数重载
 function handleData(x: any): any {
   if (typeof x === 'string') return x.split('')
-  return x.toString().split('').map(v => Number(v))
+  return x.toString().split('').map((v: number): number => Number(v))
 }
 
 // console.log(handleData('abc').map(v => v.toFixed()));
