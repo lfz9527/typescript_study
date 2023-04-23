@@ -259,6 +259,128 @@ let tuple1: PromiseTuple = [
 
 console.log(tuple1);
 
-// unknown
+// unknown 3.0版本中的顶级类型
+// 1.任何类型都可以赋值给unknown类型
+let value1: unknown
+value1 = 'a'
+value1 = 213
+
+// 2、如果没有类型断言或基于控制流的类型细化时，unknown不可以赋值给其他类型，只能赋值给any，和unknown类型
+let value2: unknown
+let value3: string
+// value3 = value2 错误
+
+// 3、如果没有类型断言或基于控制流的类型细化时，不能在他上面进行任何操作运算
+let value4: unknown
+// value4+=1 错误
+
+// 4、unknown与任何其他类型组成的交叉类型，最后都等于其他类型
+let type1: string & unknown // string 类型
+let type2: number & unknown // number 类型
+let type3: unknown & unknown // unknown
+let type4: Array<number> & unknown  // number[]
+
+// 5、unknown与其他类型组成的联合类型(any除外)，都等于unknown类型
+let type5: string | unknown  // unknown
+let type6: number | unknown  // unknown
+let type7: number[] | unknown  // unknown
+
+// 6、never类型是unknown的子类型
+type type8 = never extends unknown ? true : false
+
+// 7、keyof unknown 等于类型 never
+type type9 = keyof unknown // never
+
+// 8、只能对unknown进行等或不等操作，不能进行其他操作
+// type5 === type7
+
+// 9、unknown类型的值不能访问他的属性、作为函数调用和作为类创建实例
+let value10: unknown
+// value10.a 错误
+// value10() 错误
+// new value10() 错误
+
+// 10、使用映射类型时，如果遍历的是unknown类型，则不会映射任何属性
+type Types1<T> = {
+  [P in keyof T]: number
+}
+
+type type11 = Types1<any>  // {[X:string]:number}
+type type12 = Types1<unknown> // {}
+
 
 // 条件类型
+// T extends U ? X ? Y
+type Types2<T> = T extends string ? string : number
+let index: Types2<'a'>
+
+// 分布式条件类型，当待检测的类型为联合类型时，该类型称为分布式条件类型，当实例化时，ts会自动分化成联合类型
+type TypeName<T> = T extends any ? T : never
+type Type3 = TypeName<string | number>
+
+type TypeName1<T> =
+  T extends string ? string :
+  T extends number ? number :
+  T extends boolean ? boolean :
+  T extends undefined ? undefined :
+  T extends () => void ? () => void :
+  object
+
+type type4 = TypeName1<Array<number>>
+type type5 = TypeName1<() => void>
+type type6 = TypeName1<number | boolean>
+
+type Diff<T, U> = T extends U ? never : T
+type Test = Diff<number | string | boolean, string | null> // number | boolean
+
+type Type7<T> = {
+  [K in keyof T]: T[K] extends ((newNum: string) => void) ? K : never
+}[keyof T] // 索引查询，除掉所有为never属性的属性值
+interface Part {
+  id: number,
+  name: string,
+  subpart: Part[];
+  undatePart(newNum: string): void
+}
+
+type Test1 = Type7<Part>
+
+
+// 条件类型的类型推断 infer 关键字
+// 不使用infer
+type Type8<T> = T extends Array<any> ? T[number] : T
+type Test2 = Type8<string[]> // string
+type Test3 = Type8<number> // number
+
+// 使用infer
+type Type9<T> = T extends Array<infer U> ? U : T
+type Test5 = Type9<string[]> // string
+type Test6 = Type9<number[]> // number
+
+// 预定义内置的条件类型
+// Exclude
+type type10 = Exclude<'a' | 2 | false, null | 'a'> // false |2
+
+// Extract
+type type13 = Extract<number | string | boolean, string> // string
+
+// NonNullable
+type type14 = NonNullable<string | number | null | undefined> // string number
+
+// ReturnType
+type type15 = ReturnType<() => string>
+type type1 = ReturnType<() => void>
+
+// InstanceType
+class aClass {
+  constructor() { }
+}
+
+type t1 = InstanceType<typeof aClass> // aClass
+type t2 = InstanceType<any> // any
+type t3 = InstanceType<never> // any
+
+
+
+
+
