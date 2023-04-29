@@ -9,4 +9,7 @@
 // import './example/Enumerate'
 // import './example/inference-compatibility'
 // import './example/advanceType/advance-type1'
-import './example/advanceType/advance-type2'
+// import './example/advanceType/advance-type2'
+// import './modules/index'
+// import './tsModules/index'
+import './tsModules/name-space'
