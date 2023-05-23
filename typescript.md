@@ -2224,11 +2224,422 @@ type t3 = InstanceType<never> // any
 
 
 
+| 声明类型          | 创建了命名空间 | 创建了类型 | 创建了值 |
+| ----------------- | :------------: | :--------: | :------: |
+| Namespace         |       √        |            |    √     |
+| Class             |                |     √      |    √     |
+| Enum              |                |     √      |    √     |
+| interface         |                |     √      |          |
+| TypeAlias类型别名 |                |     √      |          |
+| Function          |                |            |    √     |
+| Variable          |                |            |    √     |
+
+```js
+interface InfoInter {
+  name: string
+}
+
+interface InfoInter {
+  age: number
+}
+
+let infoInter: InfoInter
+// 两个同名的接口。会合并成一个接口，
+// 所以infoInter属性必须包含两个字段
+// infoInter = { // 报错
+//   age: 23
+// } 
+
+// 多个同名接口定义的非函数类型的成员。命名应该不重复的，如果重复了类型应该相同，反之会报错
+interface a {
+  s: number
+  getTel(n: number): number
+}
+interface a {
+  // s: string  // 错误
+  s: number
+  getTel(n: string): string
+}
+
+// 函数成员都会被当成函数的重载，合并时，函数成员在后面的优先级最高
+let ac1: a = {
+  s: 23,
+  getTel(t: any): any {
+    if (typeof t === 'string') return t.length
+    return String(t)
+  }
+}
+
+console.log(ac1.getTel(333));
+
+// 两个同名命名空间，会合并
+namespace Validation {
+  const numberReg = /^[0-5]$/  // 没有export 出去的在其他同名的空间里是找不到的
+  export const checkNumber1 = () => { }
+}
+namespace Validation {
+  // console.log(numberReg); // 没有
+  export const checkString2 = () => { }
+}
+
+
+// 不同类型合并
+
+// 命名空间和类的合并
+// 要求同名的类和命名空，要求类的定义必须在命名空间的前面，最后合并的结果是一个包含一些以命名空间导出内容为静态属性的类型
+
+class Validations1 {
+  constructor() { }
+  checkType() { }
+}
+
+namespace Validations1 {
+  export const numberReg = /^[0-5]$/
+}
+// 在类型 Validations1 中有numberReg
+console.log(Validations1.numberReg); // /^[0-5]$/
+
+// 命名空间和函数
+function countUp() {
+  countUp.count++
+}
+namespace countUp {
+  export let count = 0
+}
+
+console.log(countUp.count); // 0
+countUp()
+console.log(countUp.count);// 1
+countUp()
+console.log(countUp.count);// 2
+countUp()
+
+
+enum Color {
+  red,
+  green,
+  blue
+}
+
+namespace Colors {
+  export const yellow = 3
+}
+
+console.log(Colors); // 枚举只有yellow = 3 没有3= yellow
+
+```
+
+
+
 # 装饰器
+
+```ts
+// 装饰器是一种特殊类型的声明，它能够被附加到类声明，方法， 访问符，属性或参数上。 
+// 装饰器使用 @expression这种形式，expression求值后必须为一个函数，它会在运行时被调用，被装饰的声明信息做为参数传入。
+
+// 普通装饰器
+function setProp(target) {
+  //...
+}
+// @setProp
+
+// 装饰器工厂
+// function color(value: string) { // 这是一个装饰器工厂
+//   return function (target) { //  这是装饰器
+//       // do something with "target" and "value"...
+//   }
+// }
+// @color
+
+// 装饰器组合
+// @f @g x
+
+// @f
+// @g
+// x
+
+// 对同一个目标可以引用多个装饰器
+// 如果装饰器为装饰器工厂，则顺序从上到下，前往后
+// 如果是直接的装饰器，则顺序为从下往上，后往前
+// @setProp()
+// @setAge
+// @setName
+// targe
+
+function setName() {
+  console.log('get setName');
+  return (target) => {
+    console.log('setName');
+
+  }
+}
+
+
+function setAge() {
+  console.log('get setAge');
+  return (target) => {
+    console.log('setAge');
+  }
+}
+
+@setName()
+@setAge()  // get setName  get setAge setAge setName 
+class Person {
+  constructor() { }
+}
+
+
+// 类装饰器，在类声明前声明
+// 类装饰器表达式会在运行时当作函数被调用，类的构造函数作为其唯一的参数。
+let sign = null
+function setNames(name: string) {
+  return (target: new () => any) => {
+    sign = target
+    console.log(target, name);
+  }
+}
+
+@setNames('lisa')
+class ClassDes {
+  constructor() { }
+}
+console.log(sign === ClassDes); // true
+console.log(sign === ClassDes.prototype.constructor); // true
+
+// 通过装饰器修改原型
+function addName(constructor: new () => void) {
+  constructor.prototype.name = "ts123"
+}
+
+@addName
+class ClassD { }
+interface ClassD {
+  name: string
+}
+const cd = new ClassD()
+console.log(cd.name);
+
+
+// 如果类装饰器返回一个值，它会使用提供的构造函数来替换类的声明。
+// 注意  如果你要返回一个新的构造函数，你必须注意处理好原来的原型链。 在运行时的装饰器调用逻辑中 不会为你做这些。
+function classDecorator<T extends { new(...args: any[]): {} }>(target: T) {
+  return class extends target {
+    newProperty = 'new property'
+    hello = 'override'
+  }
+}
+
+@classDecorator
+class Greeter {
+  property = 'property'
+  hello: string
+  constructor(m: string) {
+    this.hello = m
+  }
+}
+
+// 装饰器返回的类替换了定义的类
+let greeter = new Greeter('world')
+console.log(greeter);
+
+
+// 方法装饰器
+// 用来处理类中的方法
+// 它可以用来处理方法的属性描述符，可以处理方法的定义
+// 当做函数调用
+// 包含三个参数
+// 参数一：如果装饰静态成员时，则是类的构造函数；如果修饰类的实例成员，则是类的原型对象
+// 参数二：成员的名字
+// 参数三：成员属性描述符
+
+
+// 属性描述符
+// configurable
+// writeable
+// enumerable
+
+interface DesObj {
+  [key: string]: string,
+}
+var desObj: DesObj = {
+  age: '23'
+}
+Object.defineProperty(desObj, 'name', {
+  value: 'lisa',
+  writable: false,
+  configurable: true,
+  enumerable: false,
+})
+
+
+desObj.name = 'ff' // 不可写，所以修改失败，
+console.log(desObj.name);
+
+for (const key in desObj) {
+  console.log(key); // 只遍历了一个可枚举属性属性
+
+}
+
+
+function Enumerable(bool: boolean): any {
+  return (targe: any, propertyName: string, desc: PropertyDescriptor) => {
+    // console.log(targe, propertyName, desc);
+    // desc.enumerable = bool
+    return {
+      value() {
+        return 'not age'
+      },
+      enumerable: bool
+    }
+  }
+}
+
+class ClassF {
+  constructor(public age: number) { }
+
+  @Enumerable(false)
+  public getAge() {
+    return this.age
+  }
+}
+const classF = new ClassF(43)
+console.log(classF.getAge()); // not age
+
+function enumerable1(bool: boolean) {
+  return (targe: any, propertyName: string, desc: PropertyDescriptor) => {
+    desc.enumerable = bool
+  }
+}
+
+
+class ClassG {
+  private _name: string
+  constructor(name: string) {
+    this._name = name
+  }
+
+  @enumerable1(false) // get set 只需要添加一个相同的装饰器
+  get name() {
+    return this._name
+  }
+
+  set name(name) {
+    this._name = name
+  }
+}
+
+const classG = new ClassG('lisa')
+for (const key in classG) {
+  console.log('classGKey', key);
+}
+
+
+// 属性装饰器
+// 声明在属性的声明之前，他有两个参数，和方法装饰器前两个参数一样 
+
+
+function printPropertyName(t: any, propertyName: string) {
+  console.log(t, propertyName);
+}
+
+class ClassH {
+  @printPropertyName
+  public name: string
+  constructor() { }
+}
+
+
+// 参数装饰器
+// 三个参数，前两个参数与方法装饰器一样
+// 参数一：如果装饰静态成员时，则是类的构造函数；如果修饰类的实例成员，则是类的原型对象
+// 参数二：成员的名字
+// 参数三：参数在参数列表的索引 
+// 参数装饰器的返回值会被忽略
+
+function required(t: any, propertyName: string, index: number) {
+  console.log(`修饰的是${propertyName}的第${index + 1}个参数`);
+
+}
+
+class ClassQ {
+  public name: string = 'LISA'
+  age: number = 23
+  getInfo(prefix: string, @required infoType: string): any {
+    return prefix + ' ' + this[infoType]
+  }
+}
+
+interface ClassI {
+  [k: string]: number | string | Function
+}
+
+const classQ = new ClassQ()
+console.log(classQ.getInfo('嘿嘿', 'age'));
+
+```
 
 
 
 # Mixins混入
+
+```ts
+// 对象混入，类混入
+interface mix {
+  a: string
+}
+
+interface mix1 {
+  b: number
+}
+
+let Ma: mix = {
+  a: 'sf'
+}
+
+let Mb: mix1 = {
+  b: 34
+}
+// 对象的混入
+let Ab = Object.assign(Ma, Mb)
+console.log(Ab);
+
+// 类的混入
+class Aa {
+  isA: boolean
+  funcA() { }
+}
+class Bb {
+  isB: boolean
+  funcB() { }
+}
+
+class ClassAB implements Aa, Bb {
+  constructor() { }
+  isA: boolean
+  isB: boolean
+  funcA(): void {
+
+  }
+  funcB(): void {
+
+  }
+}
+
+function mixins(base: any, from: any[]) {
+  from.forEach(f => {
+    Object.getOwnPropertyNames(f.prototype).forEach(key => {
+      console.log(key);
+      base.prototype[key] = f.prototype[key]
+
+    })
+  })
+}
+
+mixins(ClassAB, [Aa, Bb])
+const ab = new ClassAB()
+console.log(ab);
+
+```
 
 
 
